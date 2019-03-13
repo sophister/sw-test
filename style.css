@@ -6,7 +6,8 @@ html, body {
 }
 
 h1 {
-  text-indent: 100%;
+  font-size: 20px;
+  color: red;
   white-space: nowrap;
   overflow: hidden;
   height: 197px;
@@ -37,4 +38,9 @@ caption {
   padding: 5px;
   background: #ccc;
   box-shadow: 1px 1px 1px black;
+}
+
+#btn{
+  font-size: 30px;
+  color: greenyellow;
 }

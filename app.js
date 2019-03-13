@@ -1,20 +1,77 @@
 // register service worker
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw-test/sw.js', { scope: '/sw-test/' }).then(function(reg) {
+    console.info('navigator.serviceWorker.controller', navigator.serviceWorker.controller, window.enableSW);
+    navigator.serviceWorker.addEventListener('controllerchange', function(e){
+      console.log('navigator.serviceWorker controllerchange ', e);
+    });
+    // 监听SW发送的事件
+    navigator.serviceWorker.addEventListener('message', function(event){
+        console.log('message from sw: ', event.data);
+    });
 
-    if(reg.installing) {
-      console.log('Service worker installing');
-    } else if(reg.waiting) {
-      console.log('Service worker installed');
-    } else if(reg.active) {
-      console.log('Service worker active');
+    navigator.serviceWorker.ready.then(function(reg){
+        console.log('navigator.serviceWorker.ready ', reg);
+        reg.addEventListener('updatefound', function() {
+            // If updatefound is fired, it means that there's
+            // a new service worker being installed.
+            var installingWorker = reg.installing;
+            console.log('A new service worker is being installed:',
+                installingWorker);
+
+            // You can listen for changes to the installing service worker's
+            // state via installingWorker.onstatechange
+            var waitWorker = reg.waiting || reg.installing;
+            waitWorker.postMessage('sw.update');
+        });
+        window.$reg = reg;
+    });
+
+    if( navigator.serviceWorker.controller ){
+
+        // 向 SW 发送事件
+      navigator.serviceWorker.controller.postMessage({
+          name: 'hello',
+          age: 30,
+          deep: {
+              arr: [ 1, 2, 3],
+              test: true,
+          }
+      });
     }
+  if( window.enableSW ){
+      navigator.serviceWorker.register('/sw-test/sw.js', { scope: '/sw-test/' }).then(function(reg) {
+console.log('reg: ', reg);
+          if(reg.installing) {
+              console.log('Service worker installing');
+          } else if(reg.waiting) {
+              console.log('Service worker installed');
+          } else if(reg.active) {
+              console.log('Service worker active');
+          }
 
-  }).catch(function(error) {
-    // registration failed
-    console.log('Registration failed with ' + error);
-  });
+      }).catch(function(error) {
+          // registration failed
+          console.log('Registration failed with ' + error);
+      });
+  }else{
+
+    // 取消 sw
+
+      if( navigator.serviceWorker.controller ){
+          navigator.serviceWorker.controller.postMessage('sw.delete');
+      }
+      // navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      //   console.log('sw registrations: ', registrations);
+      //     for(let registration of registrations) {
+      //         registration.unregister().then(function(success){
+      //           console.log('sw unregister result: ', success);
+      //         }).catch(function(err){
+      //           console.error('sw unregister error: ', err);
+      //         });
+      //     } });
+  }
+
 }
 
 // function for loading each image via XHR
@@ -72,3 +129,11 @@ window.onload = function() {
     });
   }
 };
+
+var btn = document.querySelector('#btn');
+btn.addEventListener('click', function(){
+  var img = document.createElement('img');
+  img.src = './gallery/snowTroopers.jpg?_=' + Math.random();
+  document.body.insertBefore(img, btn);
+});
+
